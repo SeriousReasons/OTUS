@@ -188,7 +188,7 @@ Consistency Policy : resync
        6       8       96        5      active sync   /dev/sdg
 ```
 
-- размонтирую md0, чтобы вместо RAID массива создать GPT раздел
+- размонтирую md0, чтобы создать GPT раздел с 4-мя партициями
 ```
 [vagrant@otuslinux ~]$ sudo umount /dev/md0
 [vagrant@otuslinux ~]$ sudo parted -s /dev/md0 mklabel gpt
