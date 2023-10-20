@@ -263,6 +263,7 @@ sdg         8:96   0   500M  0 disk
 
 - добавляю в секцию box.vm.provision vagrantfile'а следующие строки для автоматического создания RAID массива и GPT раздела при загрузке
 ```
+	yum install -y mdadm
         mdadm --zero-superblock --force /dev/sd{b,c,d,e,f,g}
         mdadm --create --verbose /dev/md0 -l 5 -n 6 /dev/sd{b,c,d,e,f,g}
         mkdir /etc/mdadm
