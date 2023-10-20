@@ -8,7 +8,7 @@
             :dfile => './sata5.vdi',
             :size => 500,
             :port => 5
-          }
+          },
           :sata56 => {
             :dfile => './sata6.vdi',
             :size => 500,
