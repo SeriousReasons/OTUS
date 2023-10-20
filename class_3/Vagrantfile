@@ -40,7 +40,6 @@ Vagrant.configure("2") do |config|
         box.vm.host_name = boxname.to_s
 
         box.vm.provider :virtualbox do |v|
-            v.gui = true
             v.cpus = boxconfig[:cpus]
             v.memory = boxconfig[:memory]
             needsController = false
