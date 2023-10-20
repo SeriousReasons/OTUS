@@ -42,7 +42,7 @@
 
 - проверяю подключены ли новые диски
 ```
-[vagrant@otuslinux ~]$ sudo lsblk
+[vagrant@RAID ~]$ sudo lsblk
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 sda      8:0    0   40G  0 disk
 └─sda1   8:1    0   40G  0 part /
@@ -56,7 +56,7 @@ sdg      8:96   0  500M  0 disk
 
 - на всякий случай зануляю суперблоки на неразмеченных дисках
 ```
-[vagrant@otuslinux ~]$ sudo mdadm --zero-superblock --force /dev/sd{b,c,d,e,f,g}
+[vagrant@RAID ~]$ sudo mdadm --zero-superblock --force /dev/sd{b,c,d,e,f,g}
 mdadm: Unrecognised md component device - /dev/sdb
 mdadm: Unrecognised md component device - /dev/sdc
 mdadm: Unrecognised md component device - /dev/sdd
@@ -67,7 +67,7 @@ mdadm: Unrecognised md component device - /dev/sdg
 
 - создаю RAID 5
 ```
-[vagrant@otuslinux ~]$ sudo mdadm --create --verbose /dev/md0 -l 5 -n 6 /dev/sd{b,c,d,e,f,g}
+[vagrant@RAID ~]$ sudo mdadm --create --verbose /dev/md0 -l 5 -n 6 /dev/sd{b,c,d,e,f,g}
 mdadm: layout defaults to left-symmetric
 mdadm: layout defaults to left-symmetric
 mdadm: chunk size defaults to 512K
@@ -78,7 +78,7 @@ mdadm: array /dev/md0 started.
 
 - проверяю, что RAID массив создан корректно
 ```
-[vagrant@otuslinux ~]$ sudo mdadm --detail /dev/md0
+[vagrant@RAID ~]$ sudo mdadm --detail /dev/md0
 /dev/md0:
            Version : 1.2
      Creation Time : Fri Oct 20 11:51:58 2023
@@ -101,7 +101,7 @@ mdadm: array /dev/md0 started.
 
 Consistency Policy : resync
 
-              Name : otuslinux:0  (local to host otuslinux)
+              Name : RAID:0  (local to host RAID)
               UUID : ce784e83:2dc5ad9b:876b1046:e049d026
             Events : 18
 
@@ -116,18 +116,18 @@ Consistency Policy : resync
 
 - создаю mdadm.conf для автосборки RAID массива
 ```
-[vagrant@otuslinux ~]$ sudo su
-[root@otuslinux ~]$ mkdir /etc/mdadm
-[root@otuslinux vagrant]# echo "DEVICE partitions" > /etc/mdadm/mdadm.conf
-[root@otuslinux vagrant]# mdadm --detail --scan --verbose | awk '/ARRAY/ {print}' >> /etc/mdadm/mdadm.conf
-[root@otuslinux vagrant]# cat /etc/mdadm/mdadm.conf
+[vagrant@RAID ~]$ sudo su
+[root@RAID ~]$ mkdir /etc/mdadm
+[root@RAID vagrant]# echo "DEVICE partitions" > /etc/mdadm/mdadm.conf
+[root@RAID vagrant]# mdadm --detail --scan --verbose | awk '/ARRAY/ {print}' >> /etc/mdadm/mdadm.conf
+[root@RAID vagrant]# cat /etc/mdadm/mdadm.conf
 DEVICE partitions
-ARRAY /dev/md0 level=raid5 num-devices=6 metadata=1.2 name=otuslinux:0 UUID=ce784e83:2dc5ad9b:876b1046:e049d026
+ARRAY /dev/md0 level=raid5 num-devices=6 metadata=1.2 name=RAID:0 UUID=ce784e83:2dc5ad9b:876b1046:e049d026
 ```
 
 - искусственно ломаю RAID массив
 ```
-[vagrant@otuslinux]# mdadm /dev/md0 --fail /dev/sdg
+[vagrant@RAID]# mdadm /dev/md0 --fail /dev/sdg
  sudo mdadm --detail /dev/md0
 /dev/md0:
            Version : 1.2
@@ -151,7 +151,7 @@ ARRAY /dev/md0 level=raid5 num-devices=6 metadata=1.2 name=otuslinux:0 UUID=ce78
 
 Consistency Policy : resync
 
-              Name : otuslinux:0  (local to host otuslinux)
+              Name : RAID:0  (local to host RAID)
               UUID : ce784e83:2dc5ad9b:876b1046:e049d026
             Events : 20
 
@@ -168,14 +168,14 @@ Consistency Policy : resync
 
 - востанавливаю RAID массив
 ```
-[vagrant@otuslinux ~]$ sudo mdadm --remove /dev/md0 /dev/sdg
+[vagrant@RAID ~]$ sudo mdadm --remove /dev/md0 /dev/sdg
 mdadm: hot removed /dev/sdg from /dev/md0
-[vagrant@otuslinux ~]$ sudo mdadm --add /dev/md0 /dev/sdg
+[vagrant@RAID ~]$ sudo mdadm --add /dev/md0 /dev/sdg
 mdadm: added /dev/sdg
 ```
 после ребилда
 ```
-[vagrant@otuslinux ~]$ sudo mdadm --detail /dev/md0
+[vagrant@RAID ~]$ sudo mdadm --detail /dev/md0
 /dev/md0:
            Version : 1.2
      Creation Time : Fri Oct 20 11:51:58 2023
@@ -198,7 +198,7 @@ mdadm: added /dev/sdg
 
 Consistency Policy : resync
 
-              Name : otuslinux:0  (local to host otuslinux)
+              Name : RAID:0  (local to host RAID)
               UUID : ce784e83:2dc5ad9b:876b1046:e049d026
             Events : 40
 
@@ -213,13 +213,13 @@ Consistency Policy : resync
 
 - размонтирую md0, чтобы создать GPT раздел с 4-мя партициями
 ```
-[vagrant@otuslinux ~]$ sudo umount /dev/md0
-[vagrant@otuslinux ~]$ sudo parted -s /dev/md0 mklabel gpt
-[vagrant@otuslinux ~]$ sudo parted /dev/md0 mkpart primary ext4 0% 25%
-[vagrant@otuslinux ~]$ sudo parted /dev/md0 mkpart primary ext4 25% 50%
-[vagrant@otuslinux ~]$ sudo parted /dev/md0 mkpart primary ext4 50% 75%
-[vagrant@otuslinux ~]$ sudo parted /dev/md0 mkpart primary ext4 75% 100%
-[vagrant@otuslinux ~]$ lsblk
+[vagrant@RAID ~]$ sudo umount /dev/md0
+[vagrant@RAID ~]$ sudo parted -s /dev/md0 mklabel gpt
+[vagrant@RAID ~]$ sudo parted /dev/md0 mkpart primary ext4 0% 25%
+[vagrant@RAID ~]$ sudo parted /dev/md0 mkpart primary ext4 25% 50%
+[vagrant@RAID ~]$ sudo parted /dev/md0 mkpart primary ext4 50% 75%
+[vagrant@RAID ~]$ sudo parted /dev/md0 mkpart primary ext4 75% 100%
+[vagrant@RAID ~]$ lsblk
 NAME      MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
 sda         8:0    0    40G  0 disk
 └─sda1      8:1    0    40G  0 part  /
@@ -284,13 +284,13 @@ sdg         8:96   0   500M  0 disk
 
 - проверка результата
 ```
-[vagrant@otuslinux ~]$ cat /proc/mdstat
+[vagrant@RAID ~]$ cat /proc/mdstat
 Personalities : [raid6] [raid5] [raid4]
 md0 : active raid5 sdf[4] sdg[6] sdd[2] sdb[0] sde[3] sdc[1]
       2549760 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6] [UUUUUU]
 
 unused devices: <none>
-[vagrant@otuslinux ~]$ lsblk
+[vagrant@RAID ~]$ lsblk
 NAME      MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
 sda         8:0    0    40G  0 disk
 └─sda1      8:1    0    40G  0 part  /
