@@ -290,7 +290,7 @@ Vagrant.configure("2") do |config|
             zfs receive otus/test@today < otus_task2.file
 
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
-            echo "Ищу в каталоге файл 'ecret_message' и смотрю содержимое" | tee -a ./all_logs ./log
+            echo "Ищу в каталоге файл 'secret_message' и смотрю содержимое" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
             echo "find /otus/test -name "secret_message" | cat" | tee -a ./all_logs ./log
