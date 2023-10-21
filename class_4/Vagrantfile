@@ -183,6 +183,7 @@ Vagrant.configure("2") do |config|
 
             echo "[vagrant@zfs ~]$ zfs get all | grep compressratio | grep -v ref" | tee -a ./all_logs ./log
             zfs get all | grep compressratio | grep -v ref | tee -a ./all_logs ./log
+            echo "\ngzip-9 обладает наиболее высокой степенью сжатия" | tee -a ./all_logs ./log
 
             echo "\n\n\n\n\n" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
