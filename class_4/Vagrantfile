@@ -194,49 +194,49 @@ Vagrant.configure("2") do |config|
             echo "Скачиваю архив" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "wget -O archive.tar.gz --no-check-certificate 'https://drive.google.com/u/0/uc?id=1KRBNW33QWqbvbVHa3hLJivOAt60yukkg&export=download" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ wget -O archive.tar.gz --no-check-certificate 'https://drive.google.com/u/0/uc?id=1KRBNW33QWqbvbVHa3hLJivOAt60yukkg&export=download" | tee -a ./all_logs ./log
             wget -O archive.tar.gz --no-check-certificate 'https://drive.google.com/u/0/uc?id=1KRBNW33QWqbvbVHa3hLJivOAt60yukkg&export=download' | tee -a ./all_logs ./log
 
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Разархивирую его" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "tar -xzvf archive.tar.gz" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ tar -xzvf archive.tar.gz" | tee -a ./all_logs ./log
             tar -xzvf archive.tar.gz | tee -a ./all_logs ./log
           
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Прверка возможности импорта полученного каталога в пул" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zpool import -d zpoolexport/" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ zpool import -d zpoolexport/" | tee -a ./all_logs ./log
             zpool import -d zpoolexport/ | tee -a ./all_logs ./log
           
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Импорт полученного каталога в пул" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zpool import -d zpoolexport/ otus" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ zpool import -d zpoolexport/ otus" | tee -a ./all_logs ./log
             zpool import -d zpoolexport/ otus | tee -a ./all_logs ./log
 
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Состав импортированного пула" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zpool status" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ zpool status" | tee -a ./all_logs ./log
             zpool status | tee -a ./all_logs ./log
 
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Все параметры файловой системы" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
 
-            echo "zpool get all otus" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ zpool get all otus" | tee -a ./all_logs ./log
             zpool get all otus | tee -a ./all_logs ./log
             
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Конкретный параметр" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zfs get available otus" | tee -a ./all_logs ./log            
+            echo "[vagrant@zfs ~]$ zfs get available otus" | tee -a ./all_logs ./log            
             zfs get available otus | tee -a ./all_logs ./log
 
 
@@ -244,14 +244,14 @@ Vagrant.configure("2") do |config|
             echo "Проверяем на readonly" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zfs get readonly otus" | tee -a ./all_logs ./log             
+            echo "[vagrant@zfs ~]$ zfs get readonly otus" | tee -a ./all_logs ./log             
             zfs get readonly otus | tee -a ./all_logs ./log
 
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Значение recordsize" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zfs get recordsize otus" | tee -a ./all_logs ./log  
+            echo "[vagrant@zfs ~]$ zfs get recordsize otus" | tee -a ./all_logs ./log  
             zfs get recordsize otus | tee -a ./all_logs ./log
 
 
@@ -259,7 +259,7 @@ Vagrant.configure("2") do |config|
             echo "Тип сжатия" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zfs get compression otus" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ zfs get compression otus" | tee -a ./all_logs ./log
             zfs get compression otus | tee -a ./all_logs ./log
 
 
@@ -267,7 +267,7 @@ Vagrant.configure("2") do |config|
             echo "Тип контрольной суммы" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zfs get checksum otus" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ zfs get checksum otus" | tee -a ./all_logs ./log
             zfs get checksum otus | tee -a ./all_logs ./log
 
             echo "\n\n\n\n\n" | tee -a ./all_logs ./log
@@ -279,21 +279,21 @@ Vagrant.configure("2") do |config|
             echo "Загрузка файла" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "wget -O otus_task2.file --no-check-certificate 'https://drive.google.com/u/0/uc?id=1gH8gCL9y7Nd5Ti3IRmplZPF1XjzxeRAG&export=download'" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ wget -O otus_task2.file --no-check-certificate 'https://drive.google.com/u/0/uc?id=1gH8gCL9y7Nd5Ti3IRmplZPF1XjzxeRAG&export=download'" | tee -a ./all_logs ./log
             wget -O otus_task2.file --no-check-certificate "https://drive.google.com/u/0/uc?id=1gH8gCL9y7Nd5Ti3IRmplZPF1XjzxeRAG&export=download"
             
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Восстанавливаю систему из снапшота" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "zfs receive otus/test@today < otus_task2.file" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ zfs receive otus/test@today < otus_task2.file" | tee -a ./all_logs ./log
             zfs receive otus/test@today < otus_task2.file
 
             echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
             echo "Ищу в каталоге файл 'secret_message' и смотрю содержимое" | tee -a ./all_logs ./log
             echo "---------------------------------------------------------" | tee -a ./all_logs ./log
             
-            echo "find /otus/test -name "secret_message" | cat" | tee -a ./all_logs ./log
+            echo "[vagrant@zfs ~]$ find /otus/test -name "secret_message" | cat" | tee -a ./all_logs ./log
             find /otus/test -name "secret_message" | cat | tee -a ./all_logs ./log
             SHELL
         end
