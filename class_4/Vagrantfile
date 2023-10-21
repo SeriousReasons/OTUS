@@ -1,0 +1,302 @@
+MACHINES = {
+  :zfs => {
+    :box_name => "centos/7",
+    :cpus => 2,
+    :memory => 1024,
+      :disks => {
+        :sata1 => {
+          :dfile => './sata1.vdi',
+          :size => 512,
+          :port => 1
+        },
+        :sata2 => {
+          :dfile => './sata2.vdi',
+          :size => 512,
+          :port => 2
+        },
+        :sata3 => {
+            :dfile => './sata3.vdi',
+            :size => 512,
+            :port => 3
+        },
+        :sata4 => {
+            :dfile => './sata4.vdi',
+            :size => 512, 
+            :port => 4
+        },
+        :sata5 => {
+            :dfile => './sata5.vdi',
+            :size => 512,
+            :port => 5
+        },
+        :sata6 => {
+            :dfile => './sata6.vdi',
+            :size => 512,
+            :port => 6
+        },
+        :sata7 => {
+            :dfile => './sata7.vdi',
+            :size => 512, 
+            :port => 7
+        },
+        :sata8 => {
+            :dfile => './sata8.vdi',
+            :size => 512, 
+            :port => 8
+        },
+      }
+  },
+}
+
+
+Vagrant.configure("2") do |config|
+
+    MACHINES.each do |boxname, boxconfig|
+  
+        config.vm.synced_folder ".", "/vagrant", disabled: true
+        config.vm.box_check_update = false
+        config.vm.define boxname do |box|
+        box.vm.box = boxconfig[:box_name]
+        config.vm.box_url = "https://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-1804_02.VirtualBox.box"
+        box.vm.host_name = boxname.to_s
+
+        box.vm.provider :virtualbox do |v|
+            v.cpus = boxconfig[:cpus]
+            v.memory = boxconfig[:memory]
+            needsController = false
+            boxconfig[:disks].each do |dname, dconf|
+              unless File.exist?(dconf[:dfile])
+                v.customize ['createhd', '--filename', dconf[:dfile], '--variant', 'Fixed', '--size', dconf[:size]]
+                needsController =  true
+              end
+            end
+    
+            if needsController == true
+              v.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
+              boxconfig[:disks].each do |dname, dconf|
+                v.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dconf[:dfile]]
+              end
+            end
+          end
+  
+        box.vm.provision "shell", inline: <<-SHELL
+            yum install -y http://download.zfsonlinux.org/epel/zfs-release.el7_8.noarch.rpm
+            rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-zfsonlinux
+            yum install -y epel-release kernel-devel zfs
+            yum-config-manager --disable zfs
+            yum-config-manager --enable zfs-kmod
+            yum install -y zfs
+            modprobe zfs
+            yum install -y wget
+
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Задание 1" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" >> ./all_logs
+            echo "Создаю пулы" >> ./all_logs
+            echo "---------------------------------------------------------" >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zpool create pool_1 mirror /dev/sdb /dev/sdc" >> ./all_logs
+            zpool create pool_1 mirror /dev/sdb /dev/sdc >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zpool create pool_2 mirror /dev/sdd /dev/sde" >> ./all_logs
+            zpool create pool_2 mirror /dev/sdd /dev/sde >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zpool create pool_3 mirror /dev/sdf /dev/sdg" >> ./all_logs
+            zpool create pool_3 mirror /dev/sdf /dev/sdg >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zpool create pool_4 mirror /dev/sdh /dev/sdi" >> ./all_logs
+            zpool create pool_4 mirror /dev/sdh /dev/sdi >> ./all_logs
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Список получившихся пулов" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "[vagrant@zfs ~]$ zpool list" | tee -a ./all_logs ./log
+            zpool list | tee -a ./all_logs ./log
+
+            echo "[vagrant@zfs ~]$ zpool status" >> ./all_logs
+            zpool status >> ./all_logs
+
+            echo "\n\n\n---------------------------------------------------------" >> ./all_logs
+            echo "Определяю алгоритм сжатие для каждого пула" >> ./all_logs
+            echo "---------------------------------------------------------" >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zfs set compression=lzjb pool_1" >> ./all_logs
+            zfs set compression=lzjb pool_1 >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zfs set compression=lz4 pool_2" >> ./all_logs
+            zfs set compression=lz4 pool_2 >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zfs set compression=gzip-9 pool_3" >> ./all_logs
+            zfs set compression=gzip-9 pool_3 >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zfs set compression=zle pool_4" >> ./all_logs
+            zfs set compression=zle pool_4 >> ./all_logs
+
+            echo "\n\n\n---------------------------------------------------------" >> ./all_logs
+            echo "Проверяю, что алгоритмы сжатия были были выбраны для каждого пула" >> ./all_logs
+            echo "---------------------------------------------------------" >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ zfs get all" >> ./all_logs
+            zfs get all >> ./all_logs
+
+            echo "\n\n\n---------------------------------------------------------" >> ./all_logs
+            echo "Загрузка файла для теста на сстепень сжатия" >> ./all_logs
+            echo "---------------------------------------------------------" >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ wget -P /pool_$i https://gutenberg.org/cache/epub/2600/pg2600.converter.log" >> ./all_logs
+            wget https://gutenberg.org/cache/epub/2600/pg2600.converter.log >> ./all_logs
+            
+            echo "\n\n\n---------------------------------------------------------" >> ./all_logs
+            echo "Копирование файла во все пулы" >> ./all_logs
+            echo "---------------------------------------------------------" >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ for i in {1..4}; do cp pg2600.converter.log /pool_$i; done" >> ./all_logs
+            for i in {1..4}; do cp pg2600.converter.log /pool_$i; done >> ./all_logs
+
+            echo "\n\n\n---------------------------------------------------------" >> ./all_logs
+            echo "Удаление файла" >> ./all_logs
+            echo "---------------------------------------------------------" >> ./all_logs
+
+            echo "[vagrant@zfs ~]$ rm pg2600.converter.log" >> ./all_logs
+            rm pg2600.converter.log >> ./all_logs
+            
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Проверка, что файл был скопирован во все пулы" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "[vagrant@zfs ~]$ ls -l /pool_*" | tee -a ./all_logs ./log
+            ls -l /pool_* | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Список пулов" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "[vagrant@zfs ~]$ zfs list" | tee -a ./all_logs ./log
+            zfs list | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Степень сжатия" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "[vagrant@zfs ~]$ zfs get all | grep compressratio | grep -v ref" | tee -a ./all_logs ./log
+            zfs get all | grep compressratio | grep -v ref | tee -a ./all_logs ./log
+
+            echo "\n\n\n\n\n" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Задание 2" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Скачиваю архив" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "wget -O archive.tar.gz --no-check-certificate 'https://drive.google.com/u/0/uc?id=1KRBNW33QWqbvbVHa3hLJivOAt60yukkg&export=download" | tee -a ./all_logs ./log
+            wget -O archive.tar.gz --no-check-certificate 'https://drive.google.com/u/0/uc?id=1KRBNW33QWqbvbVHa3hLJivOAt60yukkg&export=download' | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Разархивирую его" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "tar -xzvf archive.tar.gz" | tee -a ./all_logs ./log
+            tar -xzvf archive.tar.gz | tee -a ./all_logs ./log
+          
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Прверка возможности импорта полученного каталога в пул" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zpool import -d zpoolexport/" | tee -a ./all_logs ./log
+            zpool import -d zpoolexport/ | tee -a ./all_logs ./log
+          
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Импорт полученного каталога в пул" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zpool import -d zpoolexport/ otus" | tee -a ./all_logs ./log
+            zpool import -d zpoolexport/ otus | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Состав импортированного пула" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zpool status" | tee -a ./all_logs ./log
+            zpool status | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Все параметры файловой системы" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "zpool get all otus" | tee -a ./all_logs ./log
+            zpool get all otus | tee -a ./all_logs ./log
+            
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Конкретный параметр" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zfs get available otus" | tee -a ./all_logs ./log            
+            zfs get available otus | tee -a ./all_logs ./log
+
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Проверяем на readonly" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zfs get readonly otus" | tee -a ./all_logs ./log             
+            zfs get readonly otus | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Значение recordsize" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zfs get recordsize otus" | tee -a ./all_logs ./log  
+            zfs get recordsize otus | tee -a ./all_logs ./log
+
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Тип сжатия" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zfs get compression otus" | tee -a ./all_logs ./log
+            zfs get compression otus | tee -a ./all_logs ./log
+
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Тип контрольной суммы" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zfs get checksum otus" | tee -a ./all_logs ./log
+            zfs get checksum otus | tee -a ./all_logs ./log
+
+            echo "\n\n\n\n\n" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Задание 3" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Загрузка файла" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "wget -O otus_task2.file --no-check-certificate 'https://drive.google.com/u/0/uc?id=1gH8gCL9y7Nd5Ti3IRmplZPF1XjzxeRAG&export=download'" | tee -a ./all_logs ./log
+            wget -O otus_task2.file --no-check-certificate "https://drive.google.com/u/0/uc?id=1gH8gCL9y7Nd5Ti3IRmplZPF1XjzxeRAG&export=download"
+            
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Восстанавливаю систему из снапшота" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "zfs receive otus/test@today < otus_task2.file" | tee -a ./all_logs ./log
+            zfs receive otus/test@today < otus_task2.file
+
+            echo "\n\n\n---------------------------------------------------------" | tee -a ./all_logs ./log
+            echo "Ищу в каталоге файл 'ecret_message' и смотрю содержимое" | tee -a ./all_logs ./log
+            echo "---------------------------------------------------------" | tee -a ./all_logs ./log
+            
+            echo "find /otus/test -name "secret_message" | cat" | tee -a ./all_logs ./log
+            find /otus/test -name "secret_message" | cat | tee -a ./all_logs ./log
+            SHELL
+        end
+    end
+end
+
+
