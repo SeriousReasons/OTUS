@@ -27,9 +27,9 @@
 ### 3. Использование Live CD/USB (скриншот 3)
 
 - Загружаюсь с Live CD/USB.
-`lsblk`
-`sudo mount /dev/sda1 /mnt`
-`sudo chroot /mnt`
+- `lsblk`
+- `sudo mount /dev/sda1 /mnt`
+- `sudo chroot /mnt`
 
 **Преимущества:**
 - Обеспечивает полный доступ к файловой системе.
